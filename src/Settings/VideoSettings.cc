@@ -85,6 +85,7 @@ DECLARE_SETTINGSFACT(VideoSettings, maxVideoSize)
 DECLARE_SETTINGSFACT(VideoSettings, enableStorageLimit)
 DECLARE_SETTINGSFACT(VideoSettings, streamEnabled)
 DECLARE_SETTINGSFACT(VideoSettings, disableWhenDisarmed)
+DECLARE_SETTINGSFACT(VideoSettings, lockManualVideoSettings)
 
 DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, videoSource)
 {
@@ -186,8 +187,9 @@ DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, tcpUrl)
 
 bool VideoSettings::streamConfigured(void)
 {
-    //-- First, check if it's autoconfigured
-    if(VideoManager::instance()->autoStreamConfigured()) {
+    //-- First, check if it's autoconfigured (only if manual settings are not locked)
+    if(VideoManager::instance()->autoStreamConfigured() && 
+       !lockManualVideoSettings()->rawValue().toBool()) {
         qCDebug(VideoManagerLog) << "Stream auto configured";
         return true;
     }
