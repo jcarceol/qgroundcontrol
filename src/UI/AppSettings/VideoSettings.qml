@@ -107,7 +107,6 @@ SettingsPage {
             text:               qsTr("Lock Manual Settings")
             fact:               _videoSettings.lockManualVideoSettings
             visible:            _isStreamSource && fact.visible
-            helpText:           qsTr("When enabled, prevents ArduPilot parameters from overriding manually configured video stream settings")
         }
 
         FactCheckBoxSlider {
