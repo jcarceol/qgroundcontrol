@@ -36,6 +36,8 @@ public:
     DEFINE_SETTINGFACT(lowLatencyMode)
     DEFINE_SETTINGFACT(forceVideoDecoder)
     DEFINE_SETTINGFACT(lockManualVideoSettings)
+    DEFINE_SETTINGFACT(overlayEnabled)
+    DEFINE_SETTINGFACT(overlayImagePath)
 
     Q_PROPERTY(bool     streamConfigured        READ streamConfigured       NOTIFY streamConfiguredChanged)
     Q_PROPERTY(QString  rtspVideoSource         READ rtspVideoSource        CONSTANT)
