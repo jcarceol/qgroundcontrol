@@ -164,6 +164,7 @@ SettingsPage {
                     onAcceptedForLoad:  (file) => _videoSettings.overlayImagePath.rawValue = file
                 }
             }
+        }
     }
 
     SettingsGroupLayout {
