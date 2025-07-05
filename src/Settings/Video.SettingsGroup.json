@@ -140,6 +140,20 @@
             "longDesc": "When enabled, prevents ArduPilot parameters from overriding manually configured video stream settings. This allows you to maintain your manual settings even when the vehicle sends stream configuration information.",
             "type": "bool",
             "default": false
+        },
+        {
+            "name": "overlayEnabled",
+            "shortDesc": "Enable Video Overlay",
+            "longDesc": "Enable displaying an overlay image on top of the video stream.",
+            "type": "bool",
+            "default": false
+        },
+        {
+            "name": "overlayImagePath",
+            "shortDesc": "Overlay Image Path",
+            "longDesc": "Path to the image file to display as an overlay on the video stream.",
+            "type": "string",
+            "default": ""
         }
     ]
 }
