@@ -158,6 +158,24 @@ Item {
                     y:      parent.height * 0.66
                     visible: _showGrid && !QGroundControl.videoManager.fullScreen
                 }
+
+                //-- Overlay Image
+                Image {
+                    id: overlayImage
+                    anchors.fill: parent
+                    source: QGroundControl.settingsManager.videoSettings.overlayImagePath.rawValue
+                    fillMode: Image.PreserveAspectFit
+                    visible: QGroundControl.settingsManager.videoSettings.overlayEnabled.rawValue && 
+                             source.toString() !== "" && !QGroundControl.videoManager.fullScreen
+                    opacity: 0.8
+                    cache: false
+                    
+                    onStatusChanged: {
+                        if (status === Image.Error) {
+                            console.warn("Failed to load overlay image:", source)
+                        }
+                    }
+                }
             }
         }
         Loader {

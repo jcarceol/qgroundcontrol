@@ -126,6 +126,47 @@ SettingsPage {
     }
 
     SettingsGroupLayout {
+        Layout.fillWidth:   true
+        heading:            qsTr("Video Overlay")
+        visible:            !_videoSourceDisabled
+
+        FactCheckBoxSlider {
+            Layout.fillWidth:   true
+            text:               qsTr("Enable Video Overlay")
+            fact:               _videoSettings.overlayEnabled
+            visible:            fact.visible
+        }
+
+        RowLayout {
+            Layout.fillWidth:   true
+            visible:            _videoSettings.overlayEnabled.rawValue
+
+            QGCLabel {
+                text:               qsTr("Overlay Image:")
+                Layout.fillWidth:   false
+            }
+            
+            QGCTextField {
+                Layout.fillWidth:   true
+                text:               _videoSettings.overlayImagePath.rawValue
+                readOnly:           true
+                placeholderText:    qsTr("No image selected")
+            }
+            
+            QGCButton {
+                text:               qsTr("Browse...")
+                onClicked:          overlayFileDialog.openForLoad()
+                
+                QGCFileDialog {
+                    id:                 overlayFileDialog
+                    title:              qsTr("Select Overlay Image")
+                    nameFilters:        ["Image Files (*.png *.jpg *.jpeg *.bmp)"]
+                    onAcceptedForLoad:  (file) => _videoSettings.overlayImagePath.rawValue = file
+                }
+            }
+    }
+
+    SettingsGroupLayout {
         Layout.fillWidth: true
         heading:            qsTr("Local Video Storage")
 
