@@ -98,6 +98,7 @@ DECLARE_SETTINGSFACT(VideoSettings, disableWhenDisarmed)
 DECLARE_SETTINGSFACT(VideoSettings, lockManualVideoSettings)
 DECLARE_SETTINGSFACT(VideoSettings, overlayEnabled)
 DECLARE_SETTINGSFACT(VideoSettings, overlayImagePath)
+DECLARE_SETTINGSFACT(VideoSettings, overlayOpacity)
 
 DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, videoSource)
 {

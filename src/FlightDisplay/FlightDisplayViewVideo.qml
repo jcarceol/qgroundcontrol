@@ -159,23 +159,7 @@ Item {
                     visible: _showGrid && !QGroundControl.videoManager.fullScreen
                 }
 
-                //-- Overlay Image
-                Image {
-                    id: overlayImage
-                    anchors.fill: parent
-                    source: QGroundControl.settingsManager.videoSettings.overlayImagePath.rawValue
-                    fillMode: Image.PreserveAspectFit
-                    visible: QGroundControl.settingsManager.videoSettings.overlayEnabled.rawValue && 
-                             source.toString() !== "" && !QGroundControl.videoManager.fullScreen
-                    opacity: 0.8
-                    cache: false
-                    
-                    onStatusChanged: {
-                        if (status === Image.Error) {
-                            console.warn("Failed to load overlay image:", source)
-                        }
-                    }
-                }
+
             }
         }
         Loader {
@@ -189,6 +173,36 @@ Item {
             sourceComponent:    videoBackgroundComponent
 
             property bool videoDisabled: QGroundControl.settingsManager.videoSettings.videoSource.rawValue === QGroundControl.settingsManager.videoSettings.disabledVideoSource
+        }
+
+        //-- Video Overlay Image (positioned above video stream)
+        Image {
+            id: overlayImage
+            anchors.fill: parent
+            source: QGroundControl.settingsManager.videoSettings.overlayImagePath.rawValue
+            fillMode: Image.PreserveAspectFit
+            visible: QGroundControl.settingsManager.videoSettings.overlayEnabled.rawValue && 
+                     source.toString() !== ""
+            opacity: QGroundControl.settingsManager.videoSettings.overlayOpacity.rawValue
+            cache: false
+            z: 100  // Ensure overlay is above video content
+            
+            // Ensure transparent areas stay transparent
+            mipmap: false
+            smooth: true
+            antialiasing: true
+            
+            onStatusChanged: {
+                if (status === Image.Error) {
+                    console.warn("Failed to load overlay image:", source)
+                } else if (status === Image.Ready) {
+                    console.log("Overlay image loaded successfully:", source)
+                }
+            }
+            
+            onSourceChanged: {
+                console.log("Overlay image source changed to:", source)
+            }
         }
 
         //-- Thermal Image

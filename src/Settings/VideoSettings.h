@@ -38,6 +38,7 @@ public:
     DEFINE_SETTINGFACT(lockManualVideoSettings)
     DEFINE_SETTINGFACT(overlayEnabled)
     DEFINE_SETTINGFACT(overlayImagePath)
+    DEFINE_SETTINGFACT(overlayOpacity)
 
     Q_PROPERTY(bool     streamConfigured        READ streamConfigured       NOTIFY streamConfiguredChanged)
     Q_PROPERTY(QString  rtspVideoSource         READ rtspVideoSource        CONSTANT)

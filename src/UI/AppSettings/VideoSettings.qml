@@ -160,10 +160,35 @@ SettingsPage {
                 QGCFileDialog {
                     id:                 overlayFileDialog
                     title:              qsTr("Select Overlay Image")
-                    nameFilters:        ["Image Files (*.png *.jpg *.jpeg *.bmp)"]
-                    onAcceptedForLoad:  (file) => _videoSettings.overlayImagePath.rawValue = file
+                    nameFilters:        ["Image Files (*.png *.jpg *.jpeg *.bmp *.svg)"]
+                    onAcceptedForLoad:  (file) => {
+                        _videoSettings.overlayImagePath.rawValue = file
+                        console.log("Overlay image selected:", file)
+                    }
                 }
             }
+        }
+
+        LabelledFactTextField {
+            Layout.fillWidth:   true
+            label:              qsTr("Overlay Opacity")
+            fact:               _videoSettings.overlayOpacity
+            visible:            _videoSettings.overlayEnabled.rawValue && fact.visible
+        }
+        
+        // Status indicator for overlay
+        QGCLabel {
+            Layout.fillWidth:   true
+            visible:            _videoSettings.overlayEnabled.rawValue
+            text: {
+                if (_videoSettings.overlayImagePath.rawValue === "") {
+                    return qsTr("No overlay image selected")
+                } else {
+                    return qsTr("Overlay: ") + _videoSettings.overlayImagePath.rawValue.split('/').pop()
+                }
+            }
+            color: _videoSettings.overlayImagePath.rawValue === "" ? qgcPal.warningText : qgcPal.text
+            font.pointSize: ScreenTools.smallFontPointSize
         }
     }
 
