@@ -179,7 +179,17 @@ Item {
         Image {
             id: overlayImage
             anchors.fill: parent
-            source: QGroundControl.settingsManager.videoSettings.overlayImagePath.rawValue
+            source: {
+                var path = QGroundControl.settingsManager.videoSettings.overlayImagePath.rawValue
+                if (path && path.toString() !== "") {
+                    // Handle local file paths correctly - Qt URL format for local files
+                    if (path.toString().startsWith("/") || path.toString().match(/^[a-zA-Z]:/)) {
+                        return "file://" + path
+                    }
+                    return path
+                }
+                return ""
+            }
             fillMode: Image.PreserveAspectFit
             visible: QGroundControl.settingsManager.videoSettings.overlayEnabled.rawValue && 
                      source.toString() !== ""

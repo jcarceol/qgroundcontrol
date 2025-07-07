@@ -16,6 +16,7 @@ import QGroundControl
 import QGroundControl.FactSystem
 import QGroundControl.FactControls
 import QGroundControl.Controls
+import QGroundControl.Palette
 import QGroundControl.ScreenTools
 
 SettingsPage {
@@ -34,6 +35,8 @@ SettingsPage {
     property bool   _videoSourceDisabled:       _videoSource === _videoSettings.disabledVideoSource
     property real   _urlFieldWidth:             ScreenTools.defaultFontPixelWidth * 40
     property bool   _requiresUDPUrl:            _isUDP264 || _isUDP265 || _isMPEGTS
+
+    QGCPalette { id: qgcPal; colorGroupEnabled: true }
 
     SettingsGroupLayout {
         Layout.fillWidth:   true
