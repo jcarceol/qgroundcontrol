@@ -136,13 +136,6 @@
     "default":           0
 },
 {
-    "name":             "lockManualVideoSettings",
-    "shortDesc": "Lock Manual Video Settings",
-    "longDesc":  "When enabled, prevents ArduPilot parameters from overriding manually configured video stream settings. This allows you to maintain your manual settings even when the vehicle sends stream configuration information.",
-    "type":             "bool",
-    "default":     false
-},
-{
     "name":             "overlayEnabled",
     "shortDesc": "Enable Video Overlay",
     "longDesc":  "Enable displaying an overlay image on top of the video stream.",
