@@ -1,0 +1,278 @@
+diff --git a/.gitignore b/.gitignore
+index 7e1d4fa41..dee89889b 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -94,3 +94,4 @@ docs/.vitepress/dist/
+ 
+ CMakeUserPresets.json
+ cpm_modules
++_deps/
+diff --git a/src/FlightDisplay/FlightDisplayViewVideo.qml b/src/FlightDisplay/FlightDisplayViewVideo.qml
+index b5980984a..610d17ab0 100644
+--- a/src/FlightDisplay/FlightDisplayViewVideo.qml
++++ b/src/FlightDisplay/FlightDisplayViewVideo.qml
+@@ -158,6 +158,8 @@ Item {
+                     y:      parent.height * 0.66
+                     visible: _showGrid && !QGroundControl.videoManager.fullScreen
+                 }
++
++
+             }
+         }
+         Loader {
+@@ -173,6 +175,46 @@ Item {
+             property bool videoDisabled: QGroundControl.settingsManager.videoSettings.videoSource.rawValue === QGroundControl.settingsManager.videoSettings.disabledVideoSource
+         }
+ 
++        //-- Video Overlay Image (positioned above video stream)
++        Image {
++            id: overlayImage
++            anchors.fill: parent
++            source: {
++                var path = QGroundControl.settingsManager.videoSettings.overlayImagePath.rawValue
++                if (path && path.toString() !== "") {
++                    // Handle local file paths correctly - Qt URL format for local files
++                    if (path.toString().startsWith("/") || path.toString().match(/^[a-zA-Z]:/)) {
++                        return "file://" + path
++                    }
++                    return path
++                }
++                return ""
++            }
++            fillMode: Image.PreserveAspectFit
++            visible: QGroundControl.settingsManager.videoSettings.overlayEnabled.rawValue && 
++                     source.toString() !== ""
++            opacity: QGroundControl.settingsManager.videoSettings.overlayOpacity.rawValue
++            cache: false
++            z: 100  // Ensure overlay is above video content
++            
++            // Ensure transparent areas stay transparent
++            mipmap: false
++            smooth: true
++            antialiasing: true
++            
++            onStatusChanged: {
++                if (status === Image.Error) {
++                    console.warn("Failed to load overlay image:", source)
++                } else if (status === Image.Ready) {
++                    console.log("Overlay image loaded successfully:", source)
++                }
++            }
++            
++            onSourceChanged: {
++                console.log("Overlay image source changed to:", source)
++            }
++        }
++
+         //-- Thermal Image
+         Item {
+             id:                 thermalItem
+diff --git a/src/Settings/Video.SettingsGroup.json b/src/Settings/Video.SettingsGroup.json
+index cf3fd14d9..e063bea6a 100644
+--- a/src/Settings/Video.SettingsGroup.json
++++ b/src/Settings/Video.SettingsGroup.json
+@@ -134,6 +134,30 @@
+     "enumStrings":      "Default,Force software decoder,Force NVIDIA decoder,Force VA-API decoder,Force DirectX3D 11 decoder,Force VideoToolbox decoder,Force Intel decoder,Force Vulkan decoder",
+     "enumValues":       "0,1,2,3,4,5,6,7",
+     "default":           0
++},
++{
++    "name":             "overlayEnabled",
++    "shortDesc": "Enable Video Overlay",
++    "longDesc":  "Enable displaying an overlay image on top of the video stream.",
++    "type":             "bool",
++    "default":     false
++},
++{
++    "name":             "overlayImagePath",
++    "shortDesc": "Overlay Image Path",
++    "longDesc":  "Path to the image file to display as an overlay on the video stream.",
++    "type":             "string",
++    "default":     ""
++},
++{
++    "name":             "overlayOpacity",
++    "shortDesc": "Overlay Opacity",
++    "longDesc":  "Opacity of the overlay image (0.0 = transparent, 1.0 = opaque).",
++    "type":             "float",
++    "min":              0.0,
++    "max":              1.0,
++    "decimalPlaces":    2,
++    "default":     1.0
+ }
+ ]
+ }
+diff --git a/src/Settings/VideoSettings.cc b/src/Settings/VideoSettings.cc
+index a2bf37bd0..af0384a9d 100644
+--- a/src/Settings/VideoSettings.cc
++++ b/src/Settings/VideoSettings.cc
+@@ -26,6 +26,7 @@ DECLARE_SETTINGGROUP(Video, "Video")
+ 
+     // Setup enum values for videoSource settings into meta data
+     QVariantList videoSourceList;
++    
+ #if defined(QGC_GST_STREAMING) || defined(QGC_QT_STREAMING)
+     videoSourceList.append(videoSourceRTSP);
+     videoSourceList.append(videoSourceUDPH264);
+@@ -41,10 +42,19 @@ DECLARE_SETTINGGROUP(Video, "Video")
+     #else
+         videoSourceList.append(videoSourceHerelinkHotspot);
+     #endif
++#else
+ #endif
++
+ #ifndef QGC_DISABLE_UVC
+-    videoSourceList.append(UVCReceiver::getDeviceNameList());
++    QStringList uvcDeviceNames = UVCReceiver::getDeviceNameList();
++    QVariantList uvcDevices;
++    for (const QString& name : uvcDeviceNames) {
++        uvcDevices.append(name);
++    }
++    videoSourceList.append(uvcDevices);
++#else
+ #endif
++
+     if (videoSourceList.count() == 0) {
+         _noVideo = true;
+         videoSourceList.append(videoSourceNoVideo);
+@@ -85,6 +95,9 @@ DECLARE_SETTINGSFACT(VideoSettings, maxVideoSize)
+ DECLARE_SETTINGSFACT(VideoSettings, enableStorageLimit)
+ DECLARE_SETTINGSFACT(VideoSettings, streamEnabled)
+ DECLARE_SETTINGSFACT(VideoSettings, disableWhenDisarmed)
++DECLARE_SETTINGSFACT(VideoSettings, overlayEnabled)
++DECLARE_SETTINGSFACT(VideoSettings, overlayImagePath)
++DECLARE_SETTINGSFACT(VideoSettings, overlayOpacity)
+ 
+ DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, videoSource)
+ {
+diff --git a/src/Settings/VideoSettings.h b/src/Settings/VideoSettings.h
+index 2ea3ceb49..8a68d008a 100644
+--- a/src/Settings/VideoSettings.h
++++ b/src/Settings/VideoSettings.h
+@@ -35,6 +35,9 @@ class VideoSettings : public SettingsGroup
+     DEFINE_SETTINGFACT(disableWhenDisarmed)
+     DEFINE_SETTINGFACT(lowLatencyMode)
+     DEFINE_SETTINGFACT(forceVideoDecoder)
++    DEFINE_SETTINGFACT(overlayEnabled)
++    DEFINE_SETTINGFACT(overlayImagePath)
++    DEFINE_SETTINGFACT(overlayOpacity)
+ 
+     Q_PROPERTY(bool     streamConfigured        READ streamConfigured       NOTIFY streamConfiguredChanged)
+     Q_PROPERTY(QString  rtspVideoSource         READ rtspVideoSource        CONSTANT)
+diff --git a/src/UI/AppSettings/VideoSettings.qml b/src/UI/AppSettings/VideoSettings.qml
+index 98efdf6ff..67ca94d7c 100644
+--- a/src/UI/AppSettings/VideoSettings.qml
++++ b/src/UI/AppSettings/VideoSettings.qml
+@@ -16,6 +16,7 @@ import QGroundControl
+ import QGroundControl.FactSystem
+ import QGroundControl.FactControls
+ import QGroundControl.Controls
++import QGroundControl.Palette
+ import QGroundControl.ScreenTools
+ 
+ SettingsPage {
+@@ -35,6 +36,8 @@ SettingsPage {
+     property real   _urlFieldWidth:             ScreenTools.defaultFontPixelWidth * 40
+     property bool   _requiresUDPUrl:            _isUDP264 || _isUDP265 || _isMPEGTS
+ 
++    QGCPalette { id: qgcPal; colorGroupEnabled: true }
++
+     SettingsGroupLayout {
+         Layout.fillWidth:   true
+         heading:            qsTr("Video Source")
+@@ -115,6 +118,73 @@ SettingsPage {
+         }
+     }
+ 
++    SettingsGroupLayout {
++        Layout.fillWidth:   true
++        heading:            qsTr("Video Overlay")
++        visible:            !_videoSourceDisabled
++
++        FactCheckBoxSlider {
++            Layout.fillWidth:   true
++            text:               qsTr("Enable Video Overlay")
++            fact:               _videoSettings.overlayEnabled
++            visible:            fact.visible
++        }
++
++        RowLayout {
++            Layout.fillWidth:   true
++            visible:            _videoSettings.overlayEnabled.rawValue
++
++            QGCLabel {
++                text:               qsTr("Overlay Image:")
++                Layout.fillWidth:   false
++            }
++            
++            QGCTextField {
++                Layout.fillWidth:   true
++                text:               _videoSettings.overlayImagePath.rawValue
++                readOnly:           true
++                placeholderText:    qsTr("No image selected")
++            }
++            
++            QGCButton {
++                text:               qsTr("Browse...")
++                onClicked:          overlayFileDialog.openForLoad()
++                
++                QGCFileDialog {
++                    id:                 overlayFileDialog
++                    title:              qsTr("Select Overlay Image")
++                    nameFilters:        ["Image Files (*.png *.jpg *.jpeg *.bmp *.svg)"]
++                    onAcceptedForLoad:  (file) => {
++                        _videoSettings.overlayImagePath.rawValue = file
++                        console.log("Overlay image selected:", file)
++                    }
++                }
++            }
++        }
++
++        LabelledFactTextField {
++            Layout.fillWidth:   true
++            label:              qsTr("Overlay Opacity")
++            fact:               _videoSettings.overlayOpacity
++            visible:            _videoSettings.overlayEnabled.rawValue && fact.visible
++        }
++        
++        // Status indicator for overlay
++        QGCLabel {
++            Layout.fillWidth:   true
++            visible:            _videoSettings.overlayEnabled.rawValue
++            text: {
++                if (_videoSettings.overlayImagePath.rawValue === "") {
++                    return qsTr("No overlay image selected")
++                } else {
++                    return qsTr("Overlay: ") + _videoSettings.overlayImagePath.rawValue.split('/').pop()
++                }
++            }
++            color: _videoSettings.overlayImagePath.rawValue === "" ? qgcPal.warningText : qgcPal.text
++            font.pointSize: ScreenTools.smallFontPointSize
++        }
++    }
++
+     SettingsGroupLayout {
+         Layout.fillWidth: true
+         heading:            qsTr("Local Video Storage")
+diff --git a/src/Utilities/SignalHandler.cc b/src/Utilities/SignalHandler.cc
+index 3306ceb01..cc378b1ed 100644
+--- a/src/Utilities/SignalHandler.cc
++++ b/src/Utilities/SignalHandler.cc
+@@ -50,7 +50,7 @@ void SignalHandler::_onSigInt()
+ {
+     _notifierInt->setEnabled(false);
+     char b;
+-    ::read(sigIntFd[1], &b, sizeof(b));
++    (void) ::read(sigIntFd[1], &b, sizeof(b));
+ 
+     _sigIntCount++;
+ 
+@@ -74,7 +74,7 @@ void SignalHandler::_onSigTerm()
+ {
+     _notifierTerm->setEnabled(false);
+     char b;
+-    ::read(sigTermFd[1], &b, sizeof(b));
++    (void) ::read(sigTermFd[1], &b, sizeof(b));
+ 
+     qCDebug(SignalHandlerLog) << "Caught SIGTERM—shutting down gracefully";
+     if (qgcApp() && qgcApp()->mainRootWindow()) {
