@@ -41,11 +41,8 @@ SettingsPage {
     SettingsGroupLayout {
         Layout.fillWidth:   true
         heading:            qsTr("Video Source")
-        headingDescription: _videoAutoStreamConfig ? 
-                            (_videoSettings.lockManualVideoSettings.rawValue ? 
-                             qsTr("Mavlink camera stream detected but manual settings are locked") : 
-                             qsTr("Mavlink camera stream is automatically configured")) : ""
-        enabled:            !_videoAutoStreamConfig || _videoSettings.lockManualVideoSettings.rawValue
+        headingDescription: _videoAutoStreamConfig ? qsTr("Mavlink camera stream is automatically configured") : ""
+        enabled:            !_videoAutoStreamConfig
 
         LabelledFactComboBox {
             Layout.fillWidth:   true
@@ -59,7 +56,7 @@ SettingsPage {
     SettingsGroupLayout {
         Layout.fillWidth:   true
         heading:            qsTr("Connection")
-        visible:            !_videoSourceDisabled && (!_videoAutoStreamConfig || _videoSettings.lockManualVideoSettings.rawValue) && (_isTCP || _isRTSP | _requiresUDPUrl)
+        visible:            !_videoSourceDisabled && !_videoAutoStreamConfig && (_isTCP || _isRTSP | _requiresUDPUrl)
 
         LabelledFactTextField {
             Layout.fillWidth:           true
@@ -95,28 +92,21 @@ SettingsPage {
             Layout.fillWidth:   true
             label:              qsTr("Aspect Ratio")
             fact:               _videoSettings.aspectRatio
-            visible:            (!_videoAutoStreamConfig || _videoSettings.lockManualVideoSettings.rawValue) && _isStreamSource && _videoSettings.aspectRatio.visible
+            visible:            !_videoAutoStreamConfig && _isStreamSource && _videoSettings.aspectRatio.visible
         }
 
         FactCheckBoxSlider {
             Layout.fillWidth:   true
             text:               qsTr("Stop recording when disarmed")
             fact:               _videoSettings.disableWhenDisarmed
-            visible:            (!_videoAutoStreamConfig || _videoSettings.lockManualVideoSettings.rawValue) && _isStreamSource && fact.visible
-        }
-
-        FactCheckBoxSlider {
-            Layout.fillWidth:   true
-            text:               qsTr("Lock Manual Settings")
-            fact:               _videoSettings.lockManualVideoSettings
-            visible:            _isStreamSource && fact.visible
+            visible:            !_videoAutoStreamConfig && _isStreamSource && fact.visible
         }
 
         FactCheckBoxSlider {
             Layout.fillWidth:   true
             text:               qsTr("Low Latency Mode")
             fact:               _videoSettings.lowLatencyMode
-            visible:            (!_videoAutoStreamConfig || _videoSettings.lockManualVideoSettings.rawValue) && _isStreamSource && fact.visible && _isGST
+            visible:            !_videoAutoStreamConfig && _isStreamSource && fact.visible && _isGST
         }
 
         LabelledFactComboBox {

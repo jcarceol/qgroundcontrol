@@ -424,12 +424,6 @@ bool VideoManager::_updateAutoStream(VideoReceiver *receiver)
         return false;
     }
 
-    // Check if user has locked manual settings
-    if (_videoSettings->lockManualVideoSettings()->rawValue().toBool()) {
-        qCDebug(VideoManagerLog) << "Manual video settings locked, skipping auto-configuration";
-        return false;
-    }
-
     qCDebug(VideoManagerLog) << QString("Configure stream (%1):").arg(receiver->name()) << pInfo->uri();
 
     QString source, url;

@@ -35,7 +35,6 @@ public:
     DEFINE_SETTINGFACT(disableWhenDisarmed)
     DEFINE_SETTINGFACT(lowLatencyMode)
     DEFINE_SETTINGFACT(forceVideoDecoder)
-    DEFINE_SETTINGFACT(lockManualVideoSettings)
     DEFINE_SETTINGFACT(overlayEnabled)
     DEFINE_SETTINGFACT(overlayImagePath)
     DEFINE_SETTINGFACT(overlayOpacity)
